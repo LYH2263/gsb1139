@@ -61,6 +61,17 @@ public class GlobalExceptionHandler {
                 .build();
     }
     
+    @ExceptionHandler(DuplicateWordException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiResponse<Void> handleDuplicateWord(DuplicateWordException ex) {
+        return ApiResponse.<Void>builder()
+                .code(409)
+                .message(ex.getMessage())
+                .data(null)
+                .traceId(generateTraceId())
+                .build();
+    }
+
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleRuntimeException(RuntimeException ex) {

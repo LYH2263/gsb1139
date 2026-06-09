@@ -2,6 +2,7 @@ package com.wordmind.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wordmind.dto.AuthDTO;
+import com.wordmind.dto.WordDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -74,5 +77,30 @@ class WordControllerTest {
         mockMvc.perform(get("/api/words")
                 .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void testCreateDuplicateWordReturnsConflict() throws Exception {
+        String uniqueWord = "dup_test_" + UUID.randomUUID().toString().substring(0, 8);
+
+        WordDTO.CreateRequest request = WordDTO.CreateRequest.builder()
+                .word(uniqueWord)
+                .meaning("测试释义")
+                .build();
+
+        mockMvc.perform(post("/api/admin/words")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        mockMvc.perform(post("/api/admin/words")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(409))
+                .andExpect(jsonPath("$.message").value("单词已存在: " + uniqueWord));
     }
 }
