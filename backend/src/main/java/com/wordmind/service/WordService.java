@@ -2,6 +2,7 @@ package com.wordmind.service;
 
 import com.wordmind.dto.WordDTO;
 import com.wordmind.entity.Word;
+import com.wordmind.exception.DuplicateWordException;
 import com.wordmind.repository.WordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -43,6 +44,10 @@ public class WordService {
     
     @Transactional
     public WordDTO.Response createWord(WordDTO.CreateRequest request) {
+        if (wordRepository.existsByWord(request.getWord())) {
+            throw new DuplicateWordException(request.getWord());
+        }
+
         Word word = new Word();
         word.setWord(request.getWord());
         word.setPhonetic(request.getPhonetic());
