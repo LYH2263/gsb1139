@@ -75,4 +75,36 @@ class WordControllerTest {
                 .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void testAdminCanCreateWord() throws Exception {
+        String uniqueWord = "unique_test_word_" + System.currentTimeMillis();
+        mockMvc.perform(post("/api/admin/words")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"word\":\"" + uniqueWord + "\",\"meaning\":\"测试单词\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.word").value(uniqueWord));
+    }
+
+    @Test
+    void testCannotCreateDuplicateWord() throws Exception {
+        String testWord = "duplicate_test_word_" + System.currentTimeMillis();
+        
+        mockMvc.perform(post("/api/admin/words")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"word\":\"" + testWord + "\",\"meaning\":\"测试单词\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+        
+        mockMvc.perform(post("/api/admin/words")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"word\":\"" + testWord + "\",\"meaning\":\"测试单词2\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("单词已存在"));
+    }
 }
