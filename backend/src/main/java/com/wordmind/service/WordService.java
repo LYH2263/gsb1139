@@ -43,6 +43,9 @@ public class WordService {
     
     @Transactional
     public WordDTO.Response createWord(WordDTO.CreateRequest request) {
+        if (wordRepository.existsByWord(request.getWord())) {
+            throw new RuntimeException("单词已存在");
+        }
         Word word = new Word();
         word.setWord(request.getWord());
         word.setPhonetic(request.getPhonetic());
