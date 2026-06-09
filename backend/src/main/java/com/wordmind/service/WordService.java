@@ -43,6 +43,10 @@ public class WordService {
     
     @Transactional
     public WordDTO.Response createWord(WordDTO.CreateRequest request) {
+        if (wordRepository.existsByWord(request.getWord())) {
+            throw new RuntimeException("单词已存在");
+        }
+        
         Word word = new Word();
         word.setWord(request.getWord());
         word.setPhonetic(request.getPhonetic());
@@ -60,7 +64,12 @@ public class WordService {
         Word word = wordRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("单词不存在"));
         
-        if (request.getWord() != null) word.setWord(request.getWord());
+        if (request.getWord() != null && !request.getWord().equals(word.getWord())) {
+            if (wordRepository.existsByWordAndIdNot(request.getWord(), id)) {
+                throw new RuntimeException("单词已存在");
+            }
+            word.setWord(request.getWord());
+        }
         if (request.getPhonetic() != null) word.setPhonetic(request.getPhonetic());
         if (request.getPos() != null) word.setPos(request.getPos());
         if (request.getMeaning() != null) word.setMeaning(request.getMeaning());

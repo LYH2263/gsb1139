@@ -22,4 +22,8 @@ public interface WordRepository extends JpaRepository<Word, Long> {
                            Pageable pageable);
     
     List<Word> findByWordIn(List<String> words);
+    
+    boolean existsByWord(String word);
+    
+    boolean existsByWordAndIdNot(String word, Long id);
 }
