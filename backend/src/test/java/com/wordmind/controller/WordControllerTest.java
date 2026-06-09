@@ -75,4 +75,37 @@ class WordControllerTest {
                 .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void testCreateDuplicateWordShouldFail() throws Exception {
+        // 使用一个本次测试唯一的单词，先成功创建一次
+        String uniqueWord = "duplicateTestWord_" + System.nanoTime();
+        String body = "{\"word\":\"" + uniqueWord + "\",\"meaning\":\"重复测试\"}";
+
+        mockMvc.perform(post("/api/admin/words")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        // 第二次创建相同的单词应当返回明确的"单词已存在"错误
+        mockMvc.perform(post("/api/admin/words")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("单词已存在"));
+    }
+
+    @Test
+    void testCreateExistingSeedWordShouldFail() throws Exception {
+        // DataInitializer 中已经初始化了 "happy" 单词，再次创建应当失败
+        mockMvc.perform(post("/api/admin/words")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"word\":\"happy\",\"meaning\":\"快乐的\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("单词已存在"));
+    }
 }
